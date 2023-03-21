@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -18,7 +19,16 @@ type conversion struct {
 
 var converters = map[string]conversion{
 	"yj": {"yaml", yaml.Unmarshal, "json", json.Marshal},
-	"jy": {"json", json.Unmarshal, "yaml", yaml.Marshal},
+	"jy": {"json", json.Unmarshal, "yaml", yamlMarshal},
+}
+
+// yamlMarshal wraps creating an encoder without horrible 4-space indents
+func yamlMarshal(object any) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	yamlencoder := yaml.NewEncoder(buf)
+	yamlencoder.SetIndent(2)
+	err := yamlencoder.Encode(object)
+	return buf.Bytes(), err
 }
 
 func convert(in []byte, converter string) ([]byte, error) {
